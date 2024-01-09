@@ -4,6 +4,7 @@ import { useCallback, useContext } from "react";
 import GlobalContext from "../../context/global";
 import { signinAnonymous, signout } from "../../firebase/authentication";
 import { useLocation, useNavigate } from "react-router-dom";
+import { signin } from "../../repository/firestore/user";
 
 export default function SignoutDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void}) {
     const { setLoading, alert } = useContext(GlobalContext);
@@ -12,22 +13,28 @@ export default function SignoutDialog(props: {open: boolean, onSubmit?: () => vo
     const location = useLocation();
 
     const signOut = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             await signout();
-            await signinAnonymous();
+            const { user } = await signinAnonymous();
+            await signin({
+                userUID: user.uid,
+                email: user.email || undefined,
+                displayName: user.displayName || undefined,
+                isAnonymous: true,
+                isLinkGoogle: false,
+            });
             if (props.onClose) {
                 props.onClose();
             }
-            setLoading(false);
             alert({message: 'Sign out successfully', severity: 'success'});
             if (location.pathname !== '/') {
                 navigate('/');
             }
         } catch (error) {
-            setLoading(false);
             alert({message: 'Sign out failed', severity: 'error'});
         }
+        setLoading(false);
     }, [location.pathname])
 
     return (

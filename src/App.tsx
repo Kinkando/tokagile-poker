@@ -10,7 +10,7 @@ import Topbar from './components/layout/Topbar';
 import { Alert as AlertModel } from './models/alert';
 import { Poker } from './models/poker';
 import { UserProfile } from './models/user';
-import { getUserProfile, watchUser } from './repository/firestore/user';
+import { watchUser } from './repository/firestore/user';
 import Router from "./router/router";
 import { randomString } from './utils/generator';
 
@@ -34,7 +34,6 @@ function App() {
   const [isPageReady, setPageReady] = useState(false);
 
   useMemo(async () => {
-    let userProfile!: UserProfile;
     await new Promise(resolve => {
       let unsubUser: Unsubscribe;
       observeAuth(async (user) => {
@@ -44,15 +43,8 @@ function App() {
         if (unsubUser) {
           unsubUser();
         }
-        userProfile = (await getUserProfile())!;
-        if (userProfile) {
-          if (userProfile.isAnonymous) {
-            setProfile(userProfile)
-          } else {
-            unsubUser = await watchUser(userProfile.userUUID, userProfile => setProfile(userProfile));
-          }
-          resolve('get profile succeeded');
-        }
+        unsubUser = await watchUser(user.uid, userProfile => setProfile(userProfile));
+        resolve('get profile succeeded');
       });
     })
     setPageReady(true);

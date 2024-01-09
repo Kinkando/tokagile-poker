@@ -1,6 +1,5 @@
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, updateProfile, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset, EmailAuthProvider, reauthenticateWithCredential, updatePassword, NextOrObserver, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset, EmailAuthProvider, reauthenticateWithCredential, updatePassword, NextOrObserver, User } from "firebase/auth";
 import app from "./firebase";
-import { AnonymousLocalStorageKey } from "../models/key";
 
 const auth = getAuth(app);
 let isObserveOnInitial = false;
@@ -16,9 +15,7 @@ export async function observeAuth(onObserve: NextOrObserver<User>) {
 }
 
 export async function signinAnonymous() {
-    Object.values(AnonymousLocalStorageKey).forEach(key => localStorage.removeItem(key));
-    const userCredential = await signInAnonymously(auth);
-    await updateProfile(userCredential.user, { displayName: 'Guest' });
+    return await signInAnonymously(auth);
 }
 
 export async function createUser(email: string, password: string) {

@@ -122,7 +122,7 @@ export default function UserMenu() {
                 <div className="flex items-center gap-2 p-4 w-full max-w-64">
                     <Avatar size='medium' profile={profile} />
                     <div className="overflow-hidden mr-1">
-                        <div className="text-ellipsis whitespace-nowrap overflow-hidden font-bold">{ profile.displayName }</div>
+                        <div className="text-ellipsis whitespace-nowrap overflow-hidden font-bold">{ profile.displayName || 'Guest' }</div>
                         <div className="text-ellipsis whitespace-nowrap overflow-hidden text-gray-500">{ profile.isAnonymous ? 'Guest user' : 'User' }</div>
                     </div>
                 </div>
