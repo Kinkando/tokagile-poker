@@ -6,11 +6,10 @@ import SignoutDialog from "./SignoutDialog";
 import { maximumDisplayNameLength } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { signout } from "../../firebase/authentication";
-import { getUserProfile } from "../../repository/firestore/user";
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function JoinGameDialog(props: {open: boolean, onSubmit?: (displayName: string, isSpectator: boolean) => void}) {
-    const { profile, setProfile, setLoading, alert } = useContext(GlobalContext);
+    const { profile, setLoading, alert } = useContext(GlobalContext);
 
     type DialogName = 'signin' | 'signup' | 'signout' | 'close';
 
@@ -38,11 +37,6 @@ export default function JoinGameDialog(props: {open: boolean, onSubmit?: (displa
         setLoading(true);
         try {
             await signout();
-            const user = await getUserProfile();
-            if (!user) {
-                throw Error('user not found')
-            }
-            setProfile(user);
             alert({message: 'Sign out successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Sign out failed', severity: 'error'});

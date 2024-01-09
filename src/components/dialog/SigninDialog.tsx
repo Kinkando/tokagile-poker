@@ -5,11 +5,11 @@ import HeaderDialog from "./HeaderDialog";
 import GoogleIcon from '/images/google-icon.png';
 import GlobalContext from "../../context/global";
 import { sendResetPasswordEmail, signInEmailPassword, signInGoogle } from "../../firebase/authentication";
-import { getUserProfile, signin } from "../../repository/firestore/user";
+import { signin } from "../../repository/firestore/user";
 import { noSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function SigninDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void, onSignup: () => void, isTransition: boolean}) {
-    const { isLoading, setLoading, setProfile, alert } = useContext(GlobalContext);
+    const { isLoading, setLoading, alert } = useContext(GlobalContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isShowPassword, setShowPassword] = useState(false);
@@ -45,15 +45,6 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
         }
     }, [countdown])
 
-    async function signIn() {
-        const userProfile = await getUserProfile();
-        if (!userProfile) {
-            throw Error('user not found')
-        }
-        setProfile(userProfile);
-        onClose();
-    }
-
     async function signInWithEmailPassword() {
         if (email.length === 0 || password.length < 6) {
             return;
@@ -65,7 +56,6 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                 userUID: user.uid,
                 displayName: user.displayName || undefined,
             })
-            await signIn();
             alert({message: 'Sign in successfully', severity: 'success'});
         } catch (error) {
             alert({message: `Email or password is invalid, please try again!`, severity: 'error'});
@@ -85,7 +75,6 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
-                await signIn();
                 alert({message: 'Sign in with google successfully', severity: 'success'});
             }
         } catch (error) {

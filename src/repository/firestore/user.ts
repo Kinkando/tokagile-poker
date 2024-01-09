@@ -1,5 +1,5 @@
 import { updateProfile } from "firebase/auth";
-import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { Timestamp, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { getCurrentUser } from "../../firebase/authentication";
 import firestore from "../../firebase/firestore";
 import { getFileURL, uploadFile } from "../../firebase/storage";
@@ -8,6 +8,52 @@ import { User, UserProfile } from "../../models/user";
 
 const userCollection = "user";
 const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).withConverter(converter<User>());
+
+export async function watchUser(userUID: string, onNext: ((userProfile: UserProfile) => void)) {
+    let cacheProfileImageObjectURL: string | undefined;
+    let cacheProfileImageSignedURL: string | undefined;
+    return onSnapshot(userDoc(userUID), async (snapshot) => {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+            return;
+        }
+        let imageURL = currentUser.photoURL || undefined;
+        if (currentUser.isAnonymous) {
+            if (currentUser.photoURL) {
+                if (!cacheProfileImageObjectURL || cacheProfileImageObjectURL !== currentUser.photoURL) {
+                    cacheProfileImageObjectURL = currentUser.photoURL;
+                    cacheProfileImageSignedURL = await getFileURL(currentUser.photoURL);
+                }
+                imageURL = cacheProfileImageSignedURL;
+            }
+            onNext({
+                userUUID: currentUser.uid,
+                email: currentUser.email ?? undefined,
+                displayName: currentUser.displayName || 'Guest',
+                isAnonymous: currentUser.isAnonymous,
+                imageURL,
+            });
+        }
+
+        if (snapshot.exists()) {
+            const user = snapshot.data();
+            if (user.imageURL) {
+                if (!cacheProfileImageObjectURL || cacheProfileImageObjectURL !== user.imageURL) {
+                    cacheProfileImageObjectURL = user.imageURL;
+                    cacheProfileImageSignedURL = await getFileURL(user.imageURL);
+                }
+                imageURL = cacheProfileImageSignedURL;
+            }
+            onNext({
+                userUUID: user.userUID,
+                email: user.email,
+                displayName: user.displayName || '',
+                isAnonymous: false,
+                imageURL,
+            });
+        }
+    });
+}
 
 export async function getUserProfile(): Promise<UserProfile | undefined> {
     const currentUser = await getCurrentUser();
