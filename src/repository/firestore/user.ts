@@ -1,7 +1,7 @@
 import { DocumentData, DocumentSnapshot, Timestamp, collection, doc, getDoc, getDocs, onSnapshot, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { getCurrentUser } from "../../firebase/authentication";
 import firestore from "../../firebase/firestore";
-import { getFileURL, uploadFile } from "../../firebase/storage";
+import { deleteFile, getFileURL, uploadFile } from "../../firebase/storage";
 import { converter } from "../../models/firestore";
 import { User as UserModel, UserProfile } from "../../models/user";
 import { User } from "firebase/auth";
@@ -73,6 +73,7 @@ export async function signin(user: UserModel) {
     const docSnap = await getDoc(userDoc(user.userUID));
     if (docSnap.exists()) {
         user.displayName = undefined;
+        user.imageURL = undefined;
         await updateDoc(userDoc(user.userUID), {...user, updatedAt: now});
     } else {
         await setDoc(userDoc(user.userUID), {...user, createdAt: now});
@@ -96,6 +97,14 @@ export async function updateUserProfile(user: {userUID: string, displayName: str
             })
         }
     })
+
+    const docSnap = await getDoc(userDoc(user.userUID));
+    if (!docSnap.exists()) {
+        return;
+    }
+    if (docSnap.data().imageURL) {
+        deleteFile(docSnap.data().imageURL!);
+    }
 
     await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
 }

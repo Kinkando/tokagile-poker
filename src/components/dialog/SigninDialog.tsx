@@ -55,6 +55,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
             await signin({
                 userUID: user.uid,
                 displayName: user.displayName || undefined,
+                imageURL: user.photoURL || undefined,
             })
             alert({message: 'Sign in successfully', severity: 'success'});
         } catch (error) {
@@ -72,6 +73,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                     userUID: user.uid,
                     email: user.email || undefined,
                     displayName: user.displayName || undefined,
+                    imageURL: user.photoURL || undefined,
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });

@@ -55,6 +55,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                 userUID: user.uid,
                 email: user.email || undefined,
                 displayName: user.displayName || user.email?.substring(0, user.email?.indexOf('@')) || 'Username',
+                imageURL: user.photoURL || undefined,
                 isAnonymous: false,
                 isLinkGoogle: false,
             })
@@ -80,6 +81,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                     userUID: user.uid,
                     email: user.email || undefined,
                     displayName: user.displayName || undefined,
+                    imageURL: user.photoURL || undefined,
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
