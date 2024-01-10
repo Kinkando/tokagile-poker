@@ -47,14 +47,10 @@ export default function RoomMenu() {
         if (typeof timer == "number") {
             return () => clearInterval(timer);
         }
+
+        // maybe update multiple times if this room has many users
         if (poker && poker.estimateStatus !== 'OPENED') {
-            for (const userUUID of Object.keys(poker.user)) {
-                // update multiple times depend on active users
-                if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null) {
-                    updateEstimateStatus(poker.roomID, 'OPENED');
-                    break;
-                }
-            }
+            updateEstimateStatus(poker.roomID, 'OPENED');
         }
     }, [countdown]);
 

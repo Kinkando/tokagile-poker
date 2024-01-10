@@ -31,6 +31,7 @@ export default function PokerRoomPage() {
     const [isSpectator, setSpectator] = useState(false);
 
     const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average?: number}>({result: {}, max: 0, total: 0, average: 0});
+    const [summaryStatus, setSummaryStatus] = useState<'set' | 'unset'>('unset');
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, sessionID, room!));
     useEffect(() => {
@@ -136,9 +137,14 @@ export default function PokerRoomPage() {
 
     useEffect(() => {
         if (poker?.estimateStatus === 'OPENED') {
-            result();
+            if (summaryStatus === 'unset') {
+                result();
+                setSummaryStatus('set');
+            }
+        } else {
+            setSummaryStatus('unset');
         }
-    }, [poker?.estimateStatus])
+    }, [poker?.estimateStatus, summaryStatus])
 
     const result = () => {
         if (!poker || poker.estimateStatus !== 'OPENED') {

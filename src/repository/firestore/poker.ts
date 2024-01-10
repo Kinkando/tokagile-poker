@@ -261,14 +261,10 @@ export async function changeFacilitator(fromUserUUID: string, toUserUUID: string
 }
 
 export async function revokeUser(userUID: string, sessionUUID: string) {
-    const now = Timestamp.fromDate(new Date())
     const docsSnap = await getDocs(query(collection(firestore, pokerCollection), where(`user.${userUID}`, '!=', null)));
     docsSnap.forEach(async (result) => {
         if (result.exists()) {
-            await updateDoc(pokerDoc(result.id), {
-                [`user.${userUID}.activeSessions`]: arrayRemove(sessionUUID),
-                updatedAt: now,
-            })
+            await updateActiveSession(userUID, sessionUUID, result.id, 'leave');
         }
     })
 }
