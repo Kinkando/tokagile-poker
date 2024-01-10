@@ -5,11 +5,12 @@ import HeaderDialog from "./HeaderDialog";
 import GoogleIcon from '/images/google-icon.png';
 import GlobalContext from "../../context/global";
 import { sendResetPasswordEmail, signInEmailPassword, signInGoogle } from "../../firebase/authentication";
+import { replaceUser } from "../../repository/firestore/poker";
 import { signin } from "../../repository/firestore/user";
 import { noSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function SigninDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void, onSignup: () => void, isTransition: boolean}) {
-    const { isLoading, setLoading, alert } = useContext(GlobalContext);
+    const { isLoading, setLoading, alert, profile, sessionID } = useContext(GlobalContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isShowPassword, setShowPassword] = useState(false);
@@ -51,12 +52,14 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
         }
         setLoading(true);
         try {
+            const userUUID = profile.userUUID;
             const user = await signInEmailPassword(email, password);
             await signin({
                 userUID: user.uid,
                 displayName: user.displayName || undefined,
                 imageURL: user.photoURL || undefined,
             })
+            replaceUser(userUUID, user.uid, sessionID);
             alert({message: 'Sign in successfully', severity: 'success'});
         } catch (error) {
             alert({message: `Email or password is invalid, please try again!`, severity: 'error'});
@@ -67,6 +70,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
     async function signInWithGoogle() {
         setLoading(true);
         try {
+            const userUUID = profile.userUUID;
             const user = await signInGoogle();
             if (user) {
                 await signin({
@@ -77,6 +81,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
+                replaceUser(userUUID, user.uid, sessionID);
                 alert({message: 'Sign in with google successfully', severity: 'success'});
             } else {
                 throw Error('Sign in with google failed');

@@ -7,6 +7,7 @@ import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../../models/p
 import { randomString } from "../../utils/generator";
 import { timeDiffString } from "../../utils/time";
 import { numberFormat } from "../../utils/number";
+import { userDoc } from "./user";
 
 const pokerCollection = "poker";
 export const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
@@ -265,6 +266,36 @@ export async function revokeUser(userUID: string, sessionUUID: string) {
     docsSnap.forEach(async (result) => {
         if (result.exists()) {
             await updateActiveSession(userUID, sessionUUID, result.id, 'leave');
+        }
+    })
+}
+
+export async function replaceUser(fromUserUID: string, toUserUID: string, sessionUUID: string) {
+    const now = Timestamp.fromDate(new Date())
+    const toUserSnap = await getDoc(userDoc(toUserUID));
+    if (!toUserSnap.exists()) {
+        return;
+    }
+    const toUser = toUserSnap.data();
+
+    const docsSnap = await getDocs(query(
+        collection(firestore, pokerCollection).withConverter(converter<Poker>()),
+        where(`user.${fromUserUID}`, '!=', null),
+    ));
+    docsSnap.forEach(async (result) => {
+        if (result.exists()) {
+            const data = result.data();
+            const isOldUserActive = data.user[fromUserUID]?.activeSessions?.length > 0 && !data.user[fromUserUID]?.isSpectator;
+            const isNewUserActive = data.user[toUserUID]?.activeSessions?.length > 0 && !data.user[toUserUID]?.isSpectator;
+
+            await updateDoc(pokerDoc(result.id), {
+                [`user.${toUserUID}.displayName`]: toUser.displayName,
+                [`user.${toUserUID}.imageURL`]: toUser.imageURL,
+                [`user.${toUserUID}.isSpectator`]: !(isOldUserActive || isNewUserActive),
+                [`user.${toUserUID}.activeSessions`]: arrayUnion(sessionUUID),
+                [`user.${fromUserUID}`]: deleteField(),
+                updatedAt: now,
+            })
         }
     })
 }
