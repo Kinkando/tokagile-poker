@@ -1,6 +1,7 @@
 import { clearUsers } from "../../repository/firestore/poker";
+import Avatar from "../shared/Avatar";
 
-export default function UserCard(props: {roomID: string, userUUID: string, displayName: string, estimatePoint?: string, isShowEstimates: boolean, allowOthersToDeleteEstimates: boolean}) {
+export default function UserCard(props: {roomID: string, userUUID: string, displayName: string, imageURL?: string, estimatePoint?: string, isShowEstimates: boolean, allowOthersToDeleteEstimates: boolean}) {
     return (
         <div className="flex flex-col items-center group max-w-48 overflow-hidden">
             <div className={"min-w-12 h-20 rounded-md relative flex items-center ease-in duration-200 preserve-3d " + (props.estimatePoint == null ? 'bg-gray-200' : props.isShowEstimates ? 'rotate-y-180 bg-gray-200 text-blue-600' : 'bg-blue-600')}>
@@ -11,6 +12,7 @@ export default function UserCard(props: {roomID: string, userUUID: string, displ
                     </svg>
                 </div>}
             </div>
+            <Avatar profile={{userUUID: props.userUUID, imageURL: props.imageURL, displayName: props.displayName, isAnonymous: false}} />
             <div className="text-black text-ellipsis whitespace-nowrap overflow-hidden w-full text-center">{props.displayName}</div>
         </div>
     );

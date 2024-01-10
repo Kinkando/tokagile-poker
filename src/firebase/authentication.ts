@@ -1,5 +1,6 @@
 import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset, EmailAuthProvider, reauthenticateWithCredential, updatePassword, NextOrObserver, User } from "firebase/auth";
 import app from "./firebase";
+import { signin } from "../repository/firestore/user";
 
 const auth = getAuth(app);
 let isObserveOnInitial = false;
@@ -15,7 +16,15 @@ export async function observeAuth(onObserve: NextOrObserver<User>) {
 }
 
 export async function signinAnonymous() {
-    return await signInAnonymously(auth);
+    await auth.authStateReady();
+    const { user } = await signInAnonymously(auth);
+    await signin({
+        userUID: user.uid,
+        email: user.email || undefined,
+        displayName: user.displayName || undefined,
+        isAnonymous: true,
+        isLinkGoogle: false,
+    });
 }
 
 export async function createUser(email: string, password: string) {

@@ -1,12 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
+import { LinearProgress } from "@mui/material";
 import GlobalContext from "../../context/global";
 import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import UserCard from "../../components/partials/UserCard";
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
-import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
 import { Map } from "../../models/generic";
-import { LinearProgress } from "@mui/material";
+import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
+import { updateUserProfile } from "../../repository/firestore/user";
 import { numberFormat } from "../../utils/number";
 
 // Object keys sequence
@@ -66,11 +67,13 @@ export default function PokerRoomPage() {
                 roomID: room!,
                 onNotFound: () => navigate('/'),
                 onNewJoiner() {
-                    return { displayName, isSpectator };
+                    if (displayName !== profile.displayName) {
+                        updateUserProfile({userUID: profile.userUUID, displayName});
+                    }
+                    return { displayName, imageURL: profile.imageURL, isSpectator };
                 },
-                onNext(data) {
+                onNext(poker) {
                     try {
-                        const poker = data.data();
                         if (!poker) {
                             throw Error('poker not found');
                         }
@@ -87,13 +90,13 @@ export default function PokerRoomPage() {
                         if (poker.option.autoRevealCards) {
                             let isVoteAll = true;
                             let hasUser = false;
-                            for (const userUUID of Object.keys(poker.user)) {
-                                if (poker.user[userUUID].isSpectator) {
+                            for (const user of Object.values(poker.user)) {
+                                if (user.isSpectator) {
                                     continue;
                                 }
-                                if (poker.user[userUUID].activeSessions?.length > 0) {
+                                if (user.activeSessions?.length > 0) {
                                     hasUser = true;
-                                    if (poker.user[userUUID].estimatePoint == null) {
+                                    if (user.estimatePoint == null) {
                                         isVoteAll = false;
                                         break;
                                     }
@@ -183,6 +186,7 @@ export default function PokerRoomPage() {
                                         key={userUUID}
                                         roomID={room!}
                                         userUUID={userUUID}
+                                        imageURL={poker.user[userUUID].imageURL}
                                         displayName={poker.user[userUUID].displayName}
                                         isShowEstimates={poker.estimateStatus === 'OPENED'}
                                         estimatePoint={poker.user[userUUID].estimatePoint}

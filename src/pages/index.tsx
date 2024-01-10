@@ -38,9 +38,9 @@ export default function HomePage() {
         if (profile.displayName) {
             setLoading(true);
             try {
-                const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
+                const roomID = await createPokerRoom(profile.userUUID, req.displayName, profile.imageURL, req.roomName, req.isSpectator, req.option);
                 if (req.displayName !== profile.displayName) {
-                    updateUserProfile({userUID: profile.userUUID, isAnonymous: profile.isAnonymous, displayName: req.displayName});
+                    updateUserProfile({userUID: profile.userUUID, displayName: req.displayName});
                 }
                 navigate(`/${roomID}`);
             } catch (error) {

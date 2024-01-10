@@ -1,10 +1,9 @@
+import { useCallback, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Dialog, DialogActions, DialogContent } from "@mui/material";
 import HeaderDialog from "./HeaderDialog";
-import { useCallback, useContext } from "react";
 import GlobalContext from "../../context/global";
 import { signinAnonymous, signout } from "../../firebase/authentication";
-import { useLocation, useNavigate } from "react-router-dom";
-import { signin } from "../../repository/firestore/user";
 
 export default function SignoutDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void}) {
     const { setLoading, alert } = useContext(GlobalContext);
@@ -16,14 +15,7 @@ export default function SignoutDialog(props: {open: boolean, onSubmit?: () => vo
         setLoading(true);
         try {
             await signout();
-            const { user } = await signinAnonymous();
-            await signin({
-                userUID: user.uid,
-                email: user.email || undefined,
-                displayName: user.displayName || undefined,
-                isAnonymous: true,
-                isLinkGoogle: false,
-            });
+            await signinAnonymous();
             if (props.onClose) {
                 props.onClose();
             }

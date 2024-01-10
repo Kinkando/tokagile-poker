@@ -79,7 +79,7 @@ export async function signin(user: UserModel) {
     }
 }
 
-export async function updateUserProfile(user: {userUID: string, isAnonymous: boolean, displayName: string, file?: File}) {
+export async function updateUserProfile(user: {userUID: string, displayName: string, file?: File}) {
     const now = Timestamp.fromDate(new Date());
     let imageURL: string | undefined = undefined;
     if (user.file) {
@@ -91,6 +91,7 @@ export async function updateUserProfile(user: {userUID: string, isAnonymous: boo
         if (result.exists()) {
             await updateDoc(doc(firestore, 'poker', result.id), {
                 [`user.${user.userUID}.displayName`]: user.displayName,
+                [`user.${user.userUID}.imageURL`]: imageURL,
                 updatedAt: now,
             })
         }

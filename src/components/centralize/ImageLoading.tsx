@@ -26,11 +26,13 @@ export default function ImageLoading(props: {sizeClass: string, size?: 'small' |
 
             {isError && <img
                 src={imagePlaceholder}
+                referrerPolicy="no-referrer"
                 className="imgClass + ' object-cover rounded-md'"
             />}
             <img
                 src={url}
                 alt="Image"
+                referrerPolicy="no-referrer"
                 className={(isLoading ? 'absolute w-0 h-0 opacity-0' : `object-cover hover:brightness-90 ease-in duration-200 transition-[--tw-brightness] `) + props.sizeClass + (props.className ? ' ' + props.className : '')}
                 loading="lazy"
                 onLoad={() => {setLoading(false); setError(false)}}

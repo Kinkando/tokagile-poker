@@ -81,7 +81,7 @@ export default function UserMenu() {
     async function updateProfile(displayName: string, file?: File) {
         setLoading(true);
         try {
-            await updateUserProfile({userUID: profile.userUUID, isAnonymous: profile.isAnonymous, displayName, file});
+            await updateUserProfile({userUID: profile.userUUID, displayName, file});
             alert({message: 'Update profile successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Update profile failed, please try again!', severity: 'error'});
