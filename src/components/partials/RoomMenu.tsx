@@ -1,14 +1,15 @@
 import { MouseEvent, useCallback, useContext, useEffect, useState } from "react";
 import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { ExpandMore, GroupRemove, Restore, Settings, Share } from "@mui/icons-material";
+import { ExpandMore, GroupRemove, Restore, Settings, Share, Visibility } from "@mui/icons-material";
+import { useLocation } from "react-router-dom";
 import GameSettingDialog from "../dialog/GameSettingDialog";
+import SpectatorListDialog from "../dialog/SpectatorListDialog";
 import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
 import { Menu as MenuModel } from "../../models/menu";
 import { EstimateStatus, UpdatePokerOptionDialog } from "../../models/poker";
 import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repository/firestore/poker";
-import { useLocation } from "react-router-dom";
 
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert } = useContext(GlobalContext);
@@ -20,7 +21,7 @@ export default function RoomMenu() {
         return paths.length === 2 && paths[1].length > 0;
     }, [location.pathname]);
 
-    type Dialog = 'shared' | 'game-setting' | 'voting-history' | 'close';
+    type Dialog = 'shared' | 'spectators' | 'game-setting' | 'voting-history' | 'close';
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [isOpenMenu, setOpenMenu] = useState(false);
@@ -119,6 +120,11 @@ export default function RoomMenu() {
                 onClick: () => poker && !!poker.roomID && displayButton(poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
                 disabled: poker?.estimateStatus === 'OPENING' || !displayButton(poker.option.allowOthersToClearUsers),
             },
+            {
+                prefixIcon: <Visibility fontSize="small" />,
+                text: 'Spectators List',
+                onClick: () => setOpenDialog('spectators'),
+            },
         ],
         [
             {
@@ -203,6 +209,7 @@ export default function RoomMenu() {
             </div>
 
             <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />
+            <SpectatorListDialog open={openDialog === 'spectators'} onClose={() => setOpenDialog('close')} poker={poker} profile={profile} />
             <GameSettingDialog open={openDialog === 'game-setting'} onSubmit={updateGameSetting} onClose={() => setOpenDialog('close')} profile={profile} poker={poker} />
             <VotingHistoryDialog open={openDialog === 'voting-history'} onClose={() => setOpenDialog('close')} poker={poker} />
         </>

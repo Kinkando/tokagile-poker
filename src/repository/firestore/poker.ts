@@ -140,7 +140,6 @@ export async function joinGame(userUUID: string, displayName: string, imageURL: 
             data.estimateStatus = 'CLOSED';
         }
         data[`user.${userUUID}.estimatePoint`] = null;
-        data[`user.${userUUID}.activeSessions`] = arrayRemove(sessionUUID);
     } else {
         data[`user.${userUUID}.activeSessions`] = arrayUnion(sessionUUID);
     }

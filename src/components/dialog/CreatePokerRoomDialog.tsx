@@ -36,7 +36,7 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             decks: [...defaultDecks],
             activeDeckID: defaultDecks[0].deckID,
         },
-        autoRevealCards: true,
+        autoRevealCards: false,
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
