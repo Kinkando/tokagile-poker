@@ -43,8 +43,10 @@ function App() {
         if (unsubUser) {
           unsubUser();
         }
-        unsubUser = await watchUser(user.uid, userProfile => setProfile(userProfile));
-        resolve('get profile succeeded');
+        unsubUser = await watchUser(user.uid, userProfile => {
+          setProfile(userProfile);
+          resolve('get profile succeeded');
+        });
       });
     })
     setPageReady(true);
