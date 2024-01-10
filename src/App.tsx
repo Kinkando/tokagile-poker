@@ -52,12 +52,6 @@ function App() {
     setPageReady(true);
   }, []);
 
-  useEffect(() => {
-    if (!isPageReady) {
-      return;
-    }
-  }, [isPageReady, profile]);
-
   // Clear poker data for re-render topbar
   useEffect(() => {
     const paths = location.pathname.split('/');

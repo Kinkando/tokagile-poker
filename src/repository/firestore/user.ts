@@ -81,10 +81,16 @@ export async function signin(user: UserModel) {
 }
 
 export async function updateUserProfile(user: {userUID: string, displayName: string, file?: File}) {
+    const docSnap = await getDoc(userDoc(user.userUID));
+    if (!docSnap.exists()) {
+        return;
+    }
+
     const now = Timestamp.fromDate(new Date());
     let imageURL: string | undefined = undefined;
     if (user.file) {
         imageURL = await uploadFile('profile/'+user.userUID, user.file);
+        deleteFile(docSnap.data().imageURL!);
     }
 
     const docsSnap = await getDocs(query(collection(firestore, 'poker'), where(`user.${user.userUID}`, '!=', null)));
@@ -98,13 +104,6 @@ export async function updateUserProfile(user: {userUID: string, displayName: str
         }
     })
 
-    const docSnap = await getDoc(userDoc(user.userUID));
-    if (!docSnap.exists()) {
-        return;
-    }
-    if (docSnap.data().imageURL) {
-        deleteFile(docSnap.data().imageURL!);
-    }
 
     await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
 }

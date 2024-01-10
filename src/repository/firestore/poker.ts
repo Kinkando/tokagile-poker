@@ -113,10 +113,17 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
-// get poker from client instead of fetch on this layer
-export async function joinGame(poker: Poker, userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
-    const data: Map<boolean | null | FieldValue | EstimateStatus> = {
+export async function joinGame(userUUID: string, displayName: string, imageURL: string | undefined, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
+    const docSnap = await getDoc(pokerDoc(roomID));
+    const poker = docSnap.data();
+    if (!poker) {
+        return;
+    }
+
+    const data: Map<boolean | null | FieldValue | EstimateStatus | string | undefined> = {
         [`user.${userUUID}.isSpectator`]: event === 'leave',
+        [`user.${userUUID}.displayName`]: displayName,
+        [`user.${userUUID}.imageURL`]: imageURL,
     }
     if (event === 'leave') {
         let isExistsUser = false;
@@ -130,7 +137,7 @@ export async function joinGame(poker: Poker, userUUID: string, sessionUUID: stri
             }
         }
         if (!isExistsUser) {
-            data.estimateStatus = 'CLOSED'
+            data.estimateStatus = 'CLOSED';
         }
         data[`user.${userUUID}.estimatePoint`] = null;
         data[`user.${userUUID}.activeSessions`] = arrayRemove(sessionUUID);

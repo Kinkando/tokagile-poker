@@ -86,6 +86,8 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                     isLinkGoogle: true,
                 });
                 alert({message: 'Sign in with google successfully', severity: 'success'});
+            } else {
+                throw Error('Sign in with google failed');
             }
         } catch (error) {
             alert({message: 'Sign in failed, please try again!', severity: 'error'});

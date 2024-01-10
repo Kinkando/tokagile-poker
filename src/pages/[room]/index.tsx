@@ -79,13 +79,6 @@ export default function PokerRoomPage() {
                         }
                         setPoker(poker);
 
-                        for (const userUUID of Object.keys(poker.user)) {
-                            if (profile.userUUID === userUUID) {
-                                setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
-                                break;
-                            }
-                        }
-
                         // set timer countdown
                         if (poker.option.autoRevealCards) {
                             let isVoteAll = true;
@@ -128,6 +121,18 @@ export default function PokerRoomPage() {
             navigate('/');
         }
     }
+
+    useEffect(() => {
+        if (!poker || !profile) {
+            return;
+        }
+        for (const userUUID of Object.keys(poker.user)) {
+            if (profile.userUUID === userUUID) {
+                setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
+                break;
+            }
+        }
+    }, [profile, poker])
 
     useEffect(() => {
         if (poker?.estimateStatus === 'OPENED') {
@@ -178,8 +183,8 @@ export default function PokerRoomPage() {
                     {
                         Object.
                             keys(poker.user).
-                            sort((a, b) => poker.user[a].displayName?.localeCompare(poker.user[b].displayName || '')).
                             filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
+                            sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
                             map(userUUID => {
                                 return (
                                     <UserCard
@@ -188,6 +193,7 @@ export default function PokerRoomPage() {
                                         userUUID={userUUID}
                                         imageURL={poker.user[userUUID].imageURL}
                                         displayName={poker.user[userUUID].displayName}
+                                        isYou={userUUID === profile.userUUID}
                                         isShowEstimates={poker.estimateStatus === 'OPENED'}
                                         estimatePoint={poker.user[userUUID].estimatePoint}
                                         allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}

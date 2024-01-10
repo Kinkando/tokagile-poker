@@ -1,4 +1,4 @@
-import { MouseEvent, useContext, useState } from "react";
+import { MouseEvent, useCallback, useContext, useState } from "react";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Switch, Typography } from "@mui/material";
 import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility } from '@mui/icons-material';
 import ProfileDialog from "../dialog/ProfileDialog";
@@ -12,9 +12,17 @@ import { Menu as MenuModel } from "../../models/menu";
 import { UserProfile } from "../../models/user";
 import { joinGame } from "../../repository/firestore/poker";
 import { updateUserProfile } from "../../repository/firestore/user";
+import { useLocation } from "react-router-dom";
 
 export default function UserMenu() {
     const { sessionID, setLoading, alert, profile, poker } = useContext(GlobalContext);
+
+    const location = useLocation();
+
+    const isPokerPath = useCallback(() => {
+        const paths = location.pathname.split('/');
+        return paths.length === 2 && paths[1].length > 0;
+    }, [location.pathname]);
 
     type DialogName = 'profile' | 'change-password' | 'signin' | 'signup' | 'signout' | 'close'
 
@@ -24,6 +32,8 @@ export default function UserMenu() {
     const [isTransition, setTransition] = useState(true);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const spectatorToggle = () => poker && joinGame(profile.userUUID, profile.displayName, profile.imageURL, sessionID, poker.roomID, (poker.user[profile.userUUID]?.isSpectator ?? true) ? 'join' : 'leave')
 
     const menu: MenuModel[][] = [
         [
@@ -36,12 +46,12 @@ export default function UserMenu() {
             {
                 prefixIcon: <Visibility fontSize="small" />,
                 text: 'Spectator Mode',
-                hasMenu: () => poker !== undefined,
-                onClick: () => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave'),
+                hasMenu: () => poker !== undefined && isPokerPath(),
+                onClick: spectatorToggle,
                 suffix: <Switch
                     size="small"
-                    checked={poker?.user[profile.userUUID]?.isSpectator}
-                    onChange={() => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
+                    checked={poker?.user[profile.userUUID]?.isSpectator ?? true}
+                    onChange={spectatorToggle}
                 />
             },
             {

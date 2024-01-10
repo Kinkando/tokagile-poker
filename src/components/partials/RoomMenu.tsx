@@ -1,4 +1,4 @@
-import { MouseEvent, useContext, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useContext, useEffect, useState } from "react";
 import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings, Share } from "@mui/icons-material";
 import GameSettingDialog from "../dialog/GameSettingDialog";
@@ -8,9 +8,17 @@ import GlobalContext from "../../context/global";
 import { Menu as MenuModel } from "../../models/menu";
 import { EstimateStatus, UpdatePokerOptionDialog } from "../../models/poker";
 import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repository/firestore/poker";
+import { useLocation } from "react-router-dom";
 
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert } = useContext(GlobalContext);
+
+    const location = useLocation();
+
+    const isPokerPath = useCallback(() => {
+        const paths = location.pathname.split('/');
+        return paths.length === 2 && paths[1].length > 0;
+    }, [location.pathname]);
 
     type Dialog = 'shared' | 'game-setting' | 'voting-history' | 'close';
 
@@ -50,7 +58,7 @@ export default function RoomMenu() {
         }
     }, [countdown]);
 
-    if (!poker) {
+    if (!poker || !isPokerPath()) {
         return (<></>);
     }
 
