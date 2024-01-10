@@ -292,6 +292,7 @@ export async function replaceUser(fromUserUID: string, toUserUID: string, sessio
                 [`user.${toUserUID}.displayName`]: toUser.displayName,
                 [`user.${toUserUID}.imageURL`]: toUser.imageURL,
                 [`user.${toUserUID}.isSpectator`]: !(isOldUserActive || isNewUserActive),
+                [`user.${toUserUID}.isFacilitator`]: data.user[toUserUID]?.isFacilitator || data.user[fromUserUID].isFacilitator,
                 [`user.${toUserUID}.activeSessions`]: arrayUnion(sessionUUID),
                 [`user.${fromUserUID}`]: deleteField(),
                 updatedAt: now,
