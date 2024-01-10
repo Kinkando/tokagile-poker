@@ -52,7 +52,7 @@ export default function UserMenu() {
                     size="small"
                     checked={poker?.user[profile.userUUID]?.isSpectator ?? true}
                     onChange={spectatorToggle}
-                />
+                />,
             },
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,

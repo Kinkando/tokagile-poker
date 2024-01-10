@@ -1,4 +1,4 @@
-import { onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp } from "firebase/firestore";
+import { onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp, getDocs, query, collection, where } from "firebase/firestore";
 import firestore from "../../firebase/firestore";
 import { getFileURL } from "../../firebase/storage";
 import { converter } from "../../models/firestore";
@@ -9,7 +9,7 @@ import { timeDiffString } from "../../utils/time";
 import { numberFormat } from "../../utils/number";
 
 const pokerCollection = "poker";
-const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
+export const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
 
 export async function isExistsPokerRoom(roomID: string) {
     const docSnap = await getDoc(pokerDoc(roomID));
@@ -45,11 +45,10 @@ export async function joinPokerRoom(req: {
             req.onNotFound();
             return;
         }
-        await newJoiner(req.userUUID, req.roomID, displayName, imageURL, isSpectator);
+        await newJoiner(req.userUUID, req.roomID, displayName, imageURL, isSpectator, req.sessionUUID);
+    } else {
+        await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
     }
-
-    // set active session
-    await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
 
     const imageMapping: Map<{objectURL?: string, signedURL?: string}> = {};
     return onSnapshot(pokerDoc(req.roomID), async (snapshot) => {
@@ -261,6 +260,19 @@ export async function changeFacilitator(fromUserUUID: string, toUserUUID: string
     });
 }
 
+export async function revokeUser(userUID: string, sessionUUID: string) {
+    const now = Timestamp.fromDate(new Date())
+    const docsSnap = await getDocs(query(collection(firestore, pokerCollection), where(`user.${userUID}`, '!=', null)));
+    docsSnap.forEach(async (result) => {
+        if (result.exists()) {
+            await updateDoc(pokerDoc(result.id), {
+                [`user.${userUID}.activeSessions`]: arrayRemove(sessionUUID),
+                updatedAt: now,
+            })
+        }
+    })
+}
+
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.activeSessions`]: event === 'join' ? arrayUnion(sessionUUID) : arrayRemove(sessionUUID),
@@ -268,11 +280,12 @@ async function updateActiveSession(userUUID: string, sessionUUID: string, roomID
     });
 }
 
-async function newJoiner(userUUID: string, roomID: string, displayName: string, imageURL: string | undefined, isSpectator: boolean) {
+async function newJoiner(userUUID: string, roomID: string, displayName: string, imageURL: string | undefined, isSpectator: boolean, sessionUUID: string) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
         [`user.${userUUID}.imageURL`]: imageURL,
         [`user.${userUUID}.isSpectator`]: isSpectator,
+        [`user.${userUUID}.activeSessions`]: arrayUnion(sessionUUID),
         updatedAt: Timestamp.fromDate(new Date()),
     });
 }

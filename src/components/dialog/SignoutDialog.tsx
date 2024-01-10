@@ -4,9 +4,10 @@ import { Button, Dialog, DialogActions, DialogContent } from "@mui/material";
 import HeaderDialog from "./HeaderDialog";
 import GlobalContext from "../../context/global";
 import { signinAnonymous, signout } from "../../firebase/authentication";
+import { revokeUser } from "../../repository/firestore/poker";
 
 export default function SignoutDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void}) {
-    const { setLoading, alert } = useContext(GlobalContext);
+    const { setLoading, alert, profile, sessionID } = useContext(GlobalContext);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -14,6 +15,7 @@ export default function SignoutDialog(props: {open: boolean, onSubmit?: () => vo
     const signOut = useCallback(async () => {
         setLoading(true);
         try {
+            revokeUser(profile.userUUID, sessionID);
             await signout();
             await signinAnonymous();
             if (props.onClose) {

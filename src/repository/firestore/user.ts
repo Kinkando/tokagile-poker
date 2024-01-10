@@ -7,7 +7,7 @@ import { User as UserModel, UserProfile } from "../../models/user";
 import { User } from "firebase/auth";
 
 const userCollection = "user";
-const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).withConverter(converter<UserModel>());
+export const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).withConverter(converter<UserModel>());
 
 async function userProfile(snapshot: DocumentSnapshot<UserModel, DocumentData>, currentUser: User, forceFetchProfile?: boolean): Promise<UserProfile | undefined> {
     let imageURL = currentUser.photoURL || undefined;
@@ -103,7 +103,6 @@ export async function updateUserProfile(user: {userUID: string, displayName: str
             })
         }
     })
-
 
     await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
 }
