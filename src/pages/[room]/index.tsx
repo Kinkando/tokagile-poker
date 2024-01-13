@@ -36,13 +36,16 @@ export default function PokerRoomPage() {
                     }
                     setPoker(poker);
 
-                    if (!poker.user[profile.userUUID]) {
-                        setOpenDialog(true);
-                        return;
-                    } else if (isFirstTime) {
-                        isFirstTime = false;
+                    if (isFirstTime) {
+                        if (!poker.user[profile.userUUID]) {
+                            setOpenDialog(true);
+                            setLoading(false);
+                            isFirstTime = false;
+                            return;
+                        }
                         await updateActiveSession(profile.userUUID, sessionID, room, 'join');
                         setLoading(false);
+                        isFirstTime = false;
                     }
 
                     // set timer countdown
@@ -70,11 +73,6 @@ export default function PokerRoomPage() {
 
                 } catch (error) {
                     navigate('/');
-                } finally {
-                    if (isFirstTime) {
-                        setLoading(false);
-                        isFirstTime = false;
-                    }
                 }
             })
         }
