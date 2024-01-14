@@ -44,7 +44,7 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
             : Object.
                 keys(poker.user).
                 filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
-                sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName))
+                sort((a, b) => poker.user[a].joinedAt.toDate().toISOString().localeCompare(poker.user[b].joinedAt.toDate().toISOString()))
         setVoterUUIDs(voterUUIDs);
         setDisplayVoteButtonOnTopbar(voterUUIDs.length > maximumVoterNumber);
 
@@ -53,7 +53,11 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
         const voterSequence: string[][] = [];
         if (isLandscape) {
             if (n <= 1) {
-                voterSequence.push(n === 0 ? [table] : [table], [voterUUIDs[0]]);
+                // voterSequence.push([''], [table], n === 0 ? [''] : [voterUUIDs[0]]);
+                if (n === 1) {
+                    voterSequence.push([voterUUIDs[0]]);
+                }
+                voterSequence.push([table]);
             } else if (n <= 6) {
                 voterSequence.push(injectArray(0, Math.ceil(n/2), voterUUIDs));
                 voterSequence.push([table]);
@@ -65,7 +69,8 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
             }
         } else {
             if (n <= 1) {
-                voterSequence.push(n === 0 ? [table] : [table, voterUUIDs[0]]);
+                // voterSequence.push(['', table, n === 0 ? '' : voterUUIDs[0]]);
+                voterSequence.push(n === 1 ? [voterUUIDs[0], table] : [table]);
             } else if (n <=4 ) {
                 voterSequence.push([...injectArray(0, Math.ceil(n/2), voterUUIDs), table, ...injectArray(Math.ceil(n/2), n, voterUUIDs)]);
             } else {
@@ -124,7 +129,7 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
                         } else if (userUUID) {
                             return <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
                         }
-                        return <div key={index} className="w-28 max-w-28 min-w-28 h-20"></div>
+                        return <DummyUser key={index} displayUserImage={setting.displayUserImage} />
                     })}
                 </div>
             })}
@@ -157,7 +162,7 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
                         if (userUUID) {
                             return <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
                         }
-                        return <div key={index} className="w-28 max-w-28 min-w-28 h-20"></div>
+                        return <DummyUser key={index} displayUserImage={setting.displayUserImage} />
                     })}
                 </div>
             })}
@@ -200,4 +205,8 @@ function PokeUser(props: {userUUID: string, roomID: string, poker: Poker, profil
         estimatePoint={props.poker.user[props.userUUID]?.estimatePoint}
         allowOthersToDeleteEstimates={(props.poker.user[props.profile.userUUID]?.isFacilitator || props.poker.option.allowOthersToDeleteEstimates) && props.userUUID !== props.profile.userUUID}
     />
+}
+
+function DummyUser(props: {displayUserImage: 'show' | 'hide'}) {
+    return <div className="w-28 max-w-28 min-w-28" style={{ height: `${props.displayUserImage === 'show' ? 9.625 : 6.5}rem` }}></div>
 }
