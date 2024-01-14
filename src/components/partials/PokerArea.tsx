@@ -1,13 +1,41 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
+import { Button, TextField } from "@mui/material";
 import UserCard from "./UserCard";
-import GlobalContext from "../../context/global";
+import { displayButton, flipCard, isUsersExists } from "../../composables/poker";
 import { maximumVoterNumber } from "../../constant/maximum-length";
+import GlobalContext from "../../context/global";
 import { Poker } from "../../models/poker";
 import { UserProfile } from "../../models/user";
+import { updateIssueName } from "../../repository/firestore/poker";
+
+function injectArray<T>(startIndex: number, endIndex: number, arrays: T[]): T[] {
+    const voterSeq: T[] = [];
+    for(let i=startIndex; i<endIndex; i++) {
+        voterSeq.push(arrays[i]);
+    }
+    return [...voterSeq]
+}
 
 export default function PokerArea(props: {roomID: string, poker: Poker, profile: UserProfile}) {
-    const { setDisplayVoteButtonOnTopbar } = useContext(GlobalContext);
+    const { setDisplayVoteButtonOnTopbar, setting } = useContext(GlobalContext);
+
     const [voterUUIDs, setVoterUUIDs] = useState<string[]>([]);
+    const [voterSequence, setVoterSequence] = useState<string[][]>([]);
+
+    const table = "TABLE";
+    const landscapeWidth = 768;
+    const [isLandscape, setLandscape] = useState(true);
+    const [windowSize, setWindowSize] = useState({width: window.innerWidth, height: window.innerHeight});
+
+    useEffect(() => {
+        const handleWindowResize = () => setWindowSize({width: window.innerWidth, height: window.innerHeight});
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
+
+    useEffect(() => {
+        setLandscape(windowSize.width >= landscapeWidth);
+    }, [windowSize.width]);
 
     useEffect(() => {
         const poker = props.poker;
@@ -19,29 +47,157 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
                 sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName))
         setVoterUUIDs(voterUUIDs);
         setDisplayVoteButtonOnTopbar(voterUUIDs.length > maximumVoterNumber);
-    }, [props.poker]);
 
-    const pokeUser = useCallback((userUUID: string, roomID: string, poker: Poker, yourUserUUID: string) => {
-        return <UserCard
-            key={userUUID}
-            roomID={roomID}
-            userUUID={userUUID}
-            imageURL={poker.user[userUUID].imageURL}
-            displayName={poker.user[userUUID].displayName}
-            isYou={userUUID === yourUserUUID}
-            isShowEstimates={poker.estimateStatus === 'OPENED'}
-            estimatePoint={poker.user[userUUID].estimatePoint}
-            allowOthersToDeleteEstimates={(poker.user[yourUserUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== yourUserUUID}
-        />
+        // Set voter to any position in front of table
+        const n = voterUUIDs.length;
+        const voterSequence: string[][] = [];
+        if (isLandscape) {
+            if (n <= 1) {
+                voterSequence.push(n === 0 ? [table] : [table], [voterUUIDs[0]]);
+            } else if (n <= 6) {
+                voterSequence.push(injectArray(0, Math.ceil(n/2), voterUUIDs));
+                voterSequence.push([table]);
+                voterSequence.push(injectArray(Math.ceil(n/2), n, voterUUIDs));
+            } else {
+                voterSequence.push(injectArray(0, Math.ceil(n/2)-1, voterUUIDs));
+                voterSequence.push([voterUUIDs[Math.ceil(n/2)-1], table, n === 7 ? '' : voterUUIDs[Math.ceil(n/2)]]);
+                voterSequence.push(injectArray(Math.ceil(n/2) + (n === 7 ? 0 : 1), n, voterUUIDs));
+            }
+        } else {
+            if (n <= 1) {
+                voterSequence.push(n === 0 ? [table] : [table, voterUUIDs[0]]);
+            } else if (n <=4 ) {
+                voterSequence.push([...injectArray(0, Math.ceil(n/2), voterUUIDs), table, ...injectArray(Math.ceil(n/2), n, voterUUIDs)]);
+            } else {
+                voterSequence.push(injectArray(4, 4+Math.ceil((n-4)/2), voterUUIDs));
+                voterSequence.push([...injectArray(0, 2, voterUUIDs), table, ...injectArray(2, 4, voterUUIDs)]);
+                voterSequence.push(n === 5 ? [''] : injectArray(4+Math.ceil((n-4)/2), n, voterUUIDs));
+            }
+        }
+        setVoterSequence(voterSequence);
+    }, [props.poker, isLandscape]);
+
+    const styleSize = useCallback((isLandscape: boolean, voterNumber: number, type: 'table' | 'screen', displayUserImage: 'show' | 'hide'): CSSProperties => {
+        const padding = 1;
+        const baseCardWidth = 7;
+        const baseCardHeight = displayUserImage === 'show' ? 9.625 : 6.5;
+        const baseCardArea = (baseCardWidth + padding * 2) * 2;
+        if (isLandscape) {
+            const baseTableWidth = 24;
+            const baseTableHeight = 10;
+            const baseWidth = type === 'table' ? baseTableWidth : baseTableWidth + baseCardArea;
+            if (voterNumber <= 8) {
+                return { width: `${baseWidth}rem`, height: `${baseTableHeight}rem` }
+            }
+            const objectWidth = Math.ceil((voterNumber-8)/2) * 7 + baseWidth;
+            return { width: `${objectWidth}rem`, height: `${baseTableHeight}rem` }
+        }
+
+        const baseTableWidth = (baseCardWidth * 2) + (padding * 3);
+        const baseWidth = type === 'table' ? baseTableWidth : baseTableWidth + baseCardArea;
+        if (voterNumber <= 4) {
+            return { width: `${baseWidth}rem`, height: '10rem' }
+        }
+        const cardNumber = Math.ceil((voterNumber-4)/2);
+        const objectHeight = cardNumber * baseCardHeight + (cardNumber + 1);
+        return { width: `${baseWidth}rem`, height: `${objectHeight}rem` }
     }, [])
 
+    if (voterUUIDs?.length > maximumVoterNumber) {
+        return <div className="px-4 flex gap-4 flex-wrap w-full h-full justify-center items-center m-auto min-h-[calc(100vh-8.5rem)] pb-40 pt-4">
+            {voterUUIDs.map((userUUID, index) => {
+                return <PokeUser key={index} userUUID={userUUID} {...props} />
+            })}
+        </div>
+    }
+
     return (
-        <div className="px-4 flex gap-4 flex-wrap w-full h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)] pb-32 pt-4">
-            {voterUUIDs.map(userUUID => {
-                return <div className="absolute top-0" key={userUUID}>
-                    {pokeUser(userUUID, props.roomID, props.poker, props.profile.userUUID)}
+        <div
+            className={"px-4 flex gap-4 swipe h-full justify-center items-center m-auto min-h-[calc(100vh-8.5rem)] pb-40 pt-4" + (isLandscape ? ' flex-col' : '')}
+            style={{width: styleSize(isLandscape, voterUUIDs.length, 'screen', setting.displayUserImage).width}}
+        >
+            {isLandscape && voterSequence.map((row, index) => {
+                return <div key={index} className="flex gap-4 items-center">
+                    {row.map((userUUID, index) => {
+                        if (userUUID === table) {
+                            return <PokeTable key={index} style={styleSize(isLandscape, voterUUIDs.length, 'table', setting.displayUserImage)} {...props} />
+                        } else if (userUUID) {
+                            return <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
+                        }
+                        return <div key={index} className="w-28 max-w-28 min-w-28 h-20"></div>
+                    })}
+                </div>
+            })}
+
+            {!isLandscape && voterSequence.map((row, index) => {
+                const tableIndex = row.findIndex(uid => uid === table);
+                if (tableIndex !== -1) {
+                    return (
+                        <div key={index} className="flex flex-col gap-4 items-center">
+                            {row.slice(0, tableIndex).length > 0 && <div className="flex gap-4 items-center">
+                                {row.slice(0, tableIndex).map((userUUID, index) => {
+                                    return (
+                                        <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
+                                    );
+                                })}
+                            </div>}
+                            <PokeTable key={index} style={styleSize(isLandscape, voterUUIDs.length, 'table', setting.displayUserImage)} {...props} />
+                            {row.slice(tableIndex+1).length > 0 && <div className="flex gap-4 items-center">
+                                {row.slice(tableIndex+1).map((userUUID, index) => {
+                                    return (
+                                        <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
+                                    );
+                                })}
+                            </div>}
+                        </div>
+                    )
+                }
+                return <div key={index} className="flex flex-col gap-4 items-center">
+                    {row.map((userUUID, index) => {
+                        if (userUUID) {
+                            return <div key={index} className="min-w-28"><PokeUser userUUID={userUUID} {...props} /></div>
+                        }
+                        return <div key={index} className="w-28 max-w-28 min-w-28 h-20"></div>
+                    })}
                 </div>
             })}
         </div>
     );
+}
+
+function PokeTable(props: {roomID: string, poker: Poker, profile: UserProfile, className?: string, style?: CSSProperties}) {
+    return <div className={"rounded-md border border-[#74b3ff] bg-[#D7E9FF] flex items-center justify-center" + ( props.className ? ` ${props.className}` : '' )} style={props.style}>
+        <div className="flex flex-col items-center gap-4 m-auto">
+            <TextField
+                variant="standard"
+                placeholder="Enter issue name"
+                label="Issue Name"
+                value={props.poker.issueName || ''}
+                onChange={e => updateIssueName(props.roomID, e.target.value)}
+                disabled={!(props.poker.user[props.profile.userUUID]?.isFacilitator || (!props.poker.user[props.profile.userUUID]?.isSpectator && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0))}
+            />
+            <Button
+                variant="contained"
+                color="success"
+                className="whitespace-nowrap"
+                onClick={() => flipCard(props.poker)}
+                disabled={(props.poker.estimateStatus === 'CLOSED' && !isUsersExists(props.poker, true)) || !displayButton(props.poker, props.profile, props.poker.option.allowOthersToShowEstimates)}
+            >
+                { props.poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
+            </Button>
+        </div>
+    </div>
+}
+
+function PokeUser(props: {userUUID: string, roomID: string, poker: Poker, profile: UserProfile}) {
+    return <UserCard
+        roomID={props.roomID}
+        userUUID={props.userUUID}
+        imageURL={props.poker.user[props.userUUID]?.imageURL}
+        displayName={props.poker.user[props.userUUID]?.displayName}
+        isYou={props.userUUID === props.profile.userUUID}
+        isShowEstimates={props.poker.estimateStatus === 'OPENED'}
+        estimatePoint={props.poker.user[props.userUUID]?.estimatePoint}
+        allowOthersToDeleteEstimates={(props.poker.user[props.profile.userUUID]?.isFacilitator || props.poker.option.allowOthersToDeleteEstimates) && props.userUUID !== props.profile.userUUID}
+    />
 }

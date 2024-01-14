@@ -13,7 +13,7 @@ import { UpdatePokerOptionDialog } from "../../models/poker";
 import { clearUsers, updatePokerOption } from "../../repository/firestore/poker";
 
 export default function RoomMenu() {
-    const { poker, profile, setLoading, alert } = useContext(GlobalContext);
+    const { poker, profile, setLoading, alert, isDisplayVoteButtonOnTopbar } = useContext(GlobalContext);
 
     const location = useLocation();
 
@@ -136,7 +136,7 @@ export default function RoomMenu() {
                 })}
             </Menu>
 
-            <div className="flex items-center gap-4 ml-auto">
+            {isDisplayVoteButtonOnTopbar && <div className="flex items-center gap-4 ml-auto">
                 <Button
                     variant="contained"
                     color="success"
@@ -146,7 +146,7 @@ export default function RoomMenu() {
                 >
                     { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
                 </Button>
-            </div>
+            </div>}
 
             <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />
             <SpectatorListDialog open={openDialog === 'spectators'} onClose={() => setOpenDialog('close')} poker={poker} profile={profile} />

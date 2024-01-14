@@ -25,6 +25,7 @@ export interface PokerUser {
     activeSessions: string[]
     isFacilitator?: boolean
     isSpectator?: boolean
+    joinedAt: Timestamp
 }
 
 export interface PokerOption {

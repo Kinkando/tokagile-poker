@@ -56,9 +56,9 @@ export default function PokerPanel(props: {roomID: string, poker: Poker, profile
     }
 
     return (
-        <div className="fixed z-10 bottom-0 swipe bg-white w-full overflow-x-auto">
+        <div className="fixed z-10 bottom-0 swipe bg-[#F9F9F9] w-full overflow-x-auto hide-scrollbar h-[8.5rem]">
             {props.poker && props.poker.estimateStatus !== 'OPENED' && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0 && !props.poker.user[props.profile.userUUID]?.isSpectator &&
-                <div className="w-fit flex justify-center items-center gap-3 p-2 sm:p-4 m-auto">
+                <div className="w-fit h-full flex justify-center items-center gap-3 p-2 sm:p-4 m-auto">
                     {props.poker.option.estimateOption.decks.find(deck => deck.deckID === props.poker.option.estimateOption.activeDeckID)?.deckValues.map(estimatePoint => {
                         return (
                             <EstimatePointCard
@@ -72,7 +72,7 @@ export default function PokerPanel(props: {roomID: string, poker: Poker, profile
                     })}
                 </div>
             }
-            {props.poker.estimateStatus === 'OPENED' && <div className="w-fit flex justify-center items-center p-2 sm:p-4 m-auto gap-8">
+            {props.poker.estimateStatus === 'OPENED' && <div className="w-fit h-full flex justify-center items-center p-2 sm:p-4 m-auto gap-8">
                 {Object.entries(summary.result).sort(([a], [b]) => a.length > b.length ? 1 : a.length < b.length ? -1 : a.localeCompare(b)).map(([point, vote]) => {
                     return (
                         <div className={"flex flex-col justify-center items-center relative " + (vote === summary.max ? 'text-black' : 'text-gray-400')} key={point}>
