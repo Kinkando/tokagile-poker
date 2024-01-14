@@ -67,7 +67,17 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <GlobalContext.Provider value={{sessionID, profile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
+        <GlobalContext.Provider
+          value={{
+            sessionID,
+            profile,
+            alert: (alert => setAlert({...alert, isShow: true})),
+            isLoading,
+            setLoading,
+            poker,
+            setPoker,
+            isPageReady,
+          }}>
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />

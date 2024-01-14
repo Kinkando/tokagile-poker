@@ -2,7 +2,7 @@ import { Timestamp } from "firebase/firestore"
 import { Map } from "./generic"
 import { Deck } from "./game"
 
-export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
+export type EstimateStatus = 'CLOSED' | 'OPENED'
 
 export interface Poker {
     session: string
@@ -31,7 +31,6 @@ export interface PokerOption {
     allowOthersToShowEstimates: boolean
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
-    autoRevealCards: boolean
     showAverage: boolean
     estimateOption: {
         decks: Deck[]
