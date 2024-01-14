@@ -11,7 +11,7 @@ import { updateUserProfile } from "../../repository/firestore/user";
 import { numberFormat } from "../../utils/number";
 
 export default function PokerRoomPage() {
-    const { sessionID, isLoading, setLoading, profile, poker, setPoker, isPageReady } = useContext(GlobalContext);
+    const { sessionID, isLoading, setLoading, profile, poker, setPoker, isPageReady, alert } = useContext(GlobalContext);
     const { room } = useParams();
     const navigate = useNavigate();
 
@@ -69,11 +69,16 @@ export default function PokerRoomPage() {
                     }
 
                 } catch (error) {
+                    if (isFirstTime) {
+                        alert({message: 'Room id was not found, please try again!', severity: 'warning'})
+                    } else {
+                        alert({message: 'This room has been deleted', severity: 'error'})
+                    }
                     navigate('/');
                 } finally {
                     if (isFirstTime) {
-                        setLoading(false);
                         isFirstTime = false;
+                        setLoading(false);
                     }
                 }
             })
