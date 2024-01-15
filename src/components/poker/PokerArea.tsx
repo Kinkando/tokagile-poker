@@ -1,12 +1,10 @@
 import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
-import { TextField } from "@mui/material";
-import PokerButton from "./PokerButton";
-import UserCard from "./UserCard";
+import PokeTable from "./PokerTable";
+import UserCard from "../partials/UserCard";
 import { maximumVoterNumber } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { Poker } from "../../models/poker";
 import { UserProfile } from "../../models/user";
-import { updateIssueName } from "../../repository/firestore/poker";
 
 function injectArray<T>(startIndex: number, endIndex: number, arrays: T[]): T[] {
     const voterSeq: T[] = [];
@@ -170,22 +168,6 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
             })}
         </div>
     );
-}
-
-function PokeTable(props: {roomID: string, poker: Poker, profile: UserProfile, className?: string, style?: CSSProperties}) {
-    return <div className={"rounded-md border border-[#74b3ff] bg-[#D7E9FF] flex items-center justify-center" + ( props.className ? ` ${props.className}` : '' )} style={props.style}>
-        <div className="flex flex-col items-center gap-4 m-auto">
-            <TextField
-                variant="standard"
-                placeholder="Enter issue name"
-                label="Issue Name"
-                value={props.poker.issueName || ''}
-                onChange={e => updateIssueName(props.roomID, e.target.value)}
-                disabled={!(props.poker.user[props.profile.userUUID]?.isFacilitator || (!props.poker.user[props.profile.userUUID]?.isSpectator && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0))}
-            />
-            <PokerButton poker={props.poker} profile={props.profile} />
-        </div>
-    </div>
 }
 
 function PokeUser(props: {userUUID: string, roomID: string, poker: Poker, profile: UserProfile}) {

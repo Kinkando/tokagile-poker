@@ -8,10 +8,10 @@ import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
 import { displayButton } from "../../composables/poker";
+import PokerButton from "../poker/PokerButton";
 import { Menu as MenuModel } from "../../models/menu";
 import { UpdatePokerOptionDialog } from "../../models/poker";
 import { clearUsers, updatePokerOption } from "../../repository/firestore/poker";
-import PokerButton from "./PokerButton";
 
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert, isDisplayVoteButtonOnTopbar } = useContext(GlobalContext);
