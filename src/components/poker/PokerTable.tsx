@@ -24,7 +24,9 @@ export default function PokeTable(props: {roomID: string, poker: Poker, profile:
     }, [countdown]);
 
     useEffect(() => {
-        setIssueName(props.poker.issueName ?? '');
+        if (countdown === 0) {
+            setIssueName(props.poker.issueName ?? '');
+        }
     }, [props.poker.issueName]);
 
     return <div className={"rounded-md border border-[#74b3ff] bg-[#D7E9FF] flex items-center justify-center" + ( props.className ? ` ${props.className}` : '' )} style={props.style}>
