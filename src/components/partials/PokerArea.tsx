@@ -1,7 +1,7 @@
 import { CSSProperties, useCallback, useContext, useEffect, useState } from "react";
-import { Button, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
+import PokerButton from "./PokerButton";
 import UserCard from "./UserCard";
-import { displayButton, flipCard, isUsersExists } from "../../composables/poker";
 import { maximumVoterNumber } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { Poker } from "../../models/poker";
@@ -183,15 +183,7 @@ function PokeTable(props: {roomID: string, poker: Poker, profile: UserProfile, c
                 onChange={e => updateIssueName(props.roomID, e.target.value)}
                 disabled={!(props.poker.user[props.profile.userUUID]?.isFacilitator || (!props.poker.user[props.profile.userUUID]?.isSpectator && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0))}
             />
-            <Button
-                variant="contained"
-                color="success"
-                className="whitespace-nowrap"
-                onClick={() => flipCard(props.poker)}
-                disabled={(props.poker.estimateStatus === 'CLOSED' && !isUsersExists(props.poker, true)) || !displayButton(props.poker, props.profile, props.poker.option.allowOthersToShowEstimates)}
-            >
-                { props.poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-            </Button>
+            <PokerButton poker={props.poker} profile={props.profile} />
         </div>
     </div>
 }
