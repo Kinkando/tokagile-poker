@@ -24,7 +24,7 @@ export async function flipCard(poker: Poker) {
     }
 }
 
-export async function isVoteAll(poker: Poker) {
+export function isVoteAll(poker: Poker) {
     let isVoteAll = true;
     let hasUser = false;
     for (const user of Object.values(poker.user)) {

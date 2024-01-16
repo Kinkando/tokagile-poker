@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useState } from "react";
 import { TextField } from "@mui/material";
 import PokerButton from "./PokerButton";
+import { isVoteAll } from "../../composables/poker";
 import { maximumIssueNameLength } from "../../constant/maximum-length";
 import { Poker } from "../../models/poker";
 import { UserProfile } from "../../models/user";
@@ -10,6 +11,13 @@ import { notMultiSpace, notStartWithSpace, setValue } from "../../utils/input";
 export default function PokeTable(props: {roomID: string, poker: Poker, profile: UserProfile, className?: string, style?: CSSProperties}) {
     const [issueName, setIssueName] = useState<string>(props.poker.issueName ?? '');
     const [countdown, setCountdown] = useState(0);
+
+    const [style, setStyle] = useState<CSSProperties>(props.style || {});
+    const [gradientBorder] = useState<CSSProperties>({
+        background: 'linear-gradient(to right, #00dbde 0%, green 50%, #00dbde 100%)',
+        backgroundSize: '200%',
+        animation: 'linearGradientFlow 5s infinite linear',
+    })
 
     useEffect(() => {
         const timer = countdown > 0 && setInterval(() => {
@@ -29,9 +37,18 @@ export default function PokeTable(props: {roomID: string, poker: Poker, profile:
         }
     }, [props.poker.issueName]);
 
-    return <div className={"rounded-md border border-[#74b3ff] bg-[#D7E9FF] flex items-center justify-center" + ( props.className ? ` ${props.className}` : '' )} style={props.style}>
-        <div className="flex flex-col items-center gap-4 m-auto">
+    useEffect(() => {
+        let style = {...props.style};
+        if (isVoteAll(props.poker)) {
+            style = {...style, ...gradientBorder}
+        }
+        setStyle(style)
+    }, [props.poker, props.style])
+
+    return <div className={"rounded-md border border-[#74b3ff] bg-[#D7E9FF] flex items-center justify-center p-1" + ( props.className ? ` ${props.className}` : '' )} style={style}>
+        <div className="rounded-md flex flex-col items-center justify-center gap-4 m-auto bg-[#D7E9FF] w-full h-full">
             <TextField
+                className="w-[75%]"
                 variant="standard"
                 placeholder="Enter issue name"
                 label="Issue Name"
